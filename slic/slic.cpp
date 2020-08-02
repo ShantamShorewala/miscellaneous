@@ -23,6 +23,62 @@ float computeDistance(cv::Mat image, float x, float y, float j, float k, float S
 
 }
 
+vector<vector<int>> connectedComponents(vector<vector<int>> labels, int n){
+
+	vector<int> dx = {-1,0,1,0};
+	vector<int> dy = {0,-1,0,1};
+	// int SuperSize = (labels.size() * labels[0].size())/n;
+	int adjLabel = 0;
+
+	vector<int> xvec((labels.size()*labels[0].size()));
+	vector<int> yvec((labels.size()*labels[0].size()));
+
+	// cout << labels.size() << "  " << labels[0].size() << "\n"; 
+	vector<vector<int>> newLabels(labels.size(), vector<int>(labels[0].size(), -1));
+	// return labels;
+	
+	int x1, y1, count;
+
+	for(int x=0; x<labels.size(); x++){
+		for(int y=0; y<labels[0].size(); y++){
+
+			if (newLabels[x][y]==-1){
+				newLabels[x][y] = labels[x][y];
+				xvec[0] = x;
+				yvec[0] = y;
+
+				for (int i=0; i<dx.size(); i++){
+					x1 = x + dx[i];
+					y1 = y + dy[i];
+					if (x1>=0 && x1<labels.size() && y1>=0 && y1<labels[0].size()){
+						if (newLabels[x][y]>=0) adjLabel = newLabels[x][y];
+					}
+				}
+
+				count=0;
+				for (int i=0; i<count; i++){
+					for(int j=0; j<dx.size(); j++){
+						x1 = x + dx[j];
+						y1 = y + dy[j];
+						if (x1 >=0 && x1 < labels.size() && y1 >= 0 && y1 < labels[0].size()){
+							if (newLabels[x][y]<0 && labels[x][y]==labels[x1][y1]){
+								xvec[count] = x1;
+								yvec[count] = y1;
+								newLabels[x1][y1] = newLabels[x][y];
+								count++;
+							}
+						}
+					}
+				}
+ 			}
+		}
+	}
+
+	cout << "Completed enforcing connectivity \n";
+
+	return newLabels;
+}
+
 int main(){
 
 	int k, m;
@@ -120,16 +176,10 @@ int main(){
 			}
 		}
 
-		cout << iter << " " << "1st \n";
-
 		for (int i=0; i < centers.size(); i++)
 			centers[i] = vector<float>{0.,0.,0.,0.,0.};
 
-		cout << iter << " " << "2nd \n";
-
 		centers_count = vector<int>(centers.size(), 0);
-
-		cout << iter << " " << "3rd \n";
 
 		for (int i=0; i<image.rows; i++){
 			for (int j=0; j<image.cols; j++){
@@ -145,8 +195,6 @@ int main(){
 			}
 		}
 
-		cout << iter << " " << "4th \n";
-
 		for (int i=0; i < centers.size(); i++){
 			centers[i][0] /= centers_count[i];
 			centers[i][1] /= centers_count[i];
@@ -155,10 +203,11 @@ int main(){
 			centers[i][4] /= centers_count[i];
 		}
 
-		cout << iter << " " << "5th \n";
 	}
 
 	cout << "Completed finding the cluster centers \n";
+
+	labels = connectedComponents(labels, S);
 
 	vector<vector<int>> temp;
 	for (int i=0; i<image.rows; i++){
@@ -213,6 +262,6 @@ int main(){
 		// }
 	}
 
-	cv::imwrite("segmented.png", original);
+	cv::imwrite("connectedSegmented.png", original);
 
 }
